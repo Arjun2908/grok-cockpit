@@ -1,0 +1,86 @@
+{
+  "name": "grok-cockpit",
+  "version": "0.1.0",
+  "productName": "Grok Cockpit",
+  "description": "Nutshell daily driver around live Grok Build TUI sessions",
+  "main": "./out/main/index.js",
+  "private": true,
+  "author": "Arjun Gupta",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck:main": "tsc --noEmit -p tsconfig.node.json --tsBuildInfoFile .cache/tsconfig.node.tsbuildinfo",
+    "typecheck:renderer": "tsc --noEmit -p tsconfig.web.json --tsBuildInfoFile .cache/tsconfig.web.tsbuildinfo",
+    "typecheck": "npm run typecheck:main && npm run typecheck:renderer",
+    "postinstall": "electron-rebuild -f -w node-pty",
+    "release:clean": "node scripts/clean-release.mjs",
+    "dist:unsigned": "npm run release:clean && npm run build && electron-builder --mac --arm64 --publish never --config.forceCodeSigning=false --config.mac.identity=null --config.mac.hardenedRuntime=false --config.mac.notarize=false",
+    "dist:checksums": "node scripts/generate-checksums.mjs release"
+  },
+  "build": {
+    "appId": "com.arjungupta.grok-cockpit",
+    "productName": "Grok Cockpit",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "!out/**/*.map"
+    ],
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["arm64"] },
+        { "target": "zip", "arch": ["arm64"] }
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "Grok-Cockpit-${version}-${arch}.${ext}",
+      "category": "public.app-category.developer-tools",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ],
+      "window": { "width": 540, "height": 380 }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Arjun2908",
+        "repo": "grok-cockpit"
+      }
+    ]
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-webgl": "^0.18.0",
+    "@xterm/xterm": "^5.5.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "^37.4.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^4.0.0",
+    "lucide-react": "^0.544.0",
+    "postcss": "^8.5.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5",
+    "vitest": "^3.2.4"
+  }
+}

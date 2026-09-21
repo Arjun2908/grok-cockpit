@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+release/
+.cache/
+.DS_Store
+*.log
+*.env
+*.tsbuildinfo
+*.dmg
+*.p12
+*.cer
+*.mobileprovision
+AuthKey_*.p8
