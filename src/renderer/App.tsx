@@ -22,6 +22,7 @@ import type {
   LinearIssue,
   McpServerHealth,
   PrInfo,
+  SessionView,
   SkillInfo,
   WorktreeInfo
 } from '@shared/types'
@@ -38,6 +39,7 @@ import {
 import { parseStatusBranch, splitPath } from '@shared/git'
 import { filterSkills, parsePaletteQuery, skillPrompt } from '@shared/skills'
 import { formatUsd, type SessionUsage } from '@shared/usage'
+import ChatPane from './ChatPane'
 import TerminalPane from './TerminalPane'
 import ReadmeView from './ReadmeView'
 import AboutView from './AboutView'
@@ -51,6 +53,7 @@ type Tab = {
   resumeId?: string
   firstPrompt?: string
   started: boolean
+  mode: SessionView
 }
 
 type LeftPanel = 'sessions' | 'linear' | 'worktrees'
@@ -127,15 +130,16 @@ export default function App() {
 
   const persist = useCallback((nextTabs: Tab[], nextActive: string | null) => {
     void window.api.saveTabs(
-      nextTabs.map(({ id, title, cwd, resumeId }) => ({ id, title, cwd, resumeId })),
+      nextTabs.map(({ id, title, cwd, resumeId, mode }) => ({ id, title, cwd, resumeId, view: mode })),
       nextActive
     )
   }, [])
 
-  const openTab = useCallback((partial: Omit<Tab, 'id' | 'started'> & { id?: string; started?: boolean }) => {
+  const openTab = useCallback((partial: Omit<Tab, 'id' | 'started' | 'mode'> & { id?: string; started?: boolean; mode?: SessionView }) => {
     const tab: Tab = {
       id: partial.id ?? newTabId(),
       started: partial.started ?? true,
+      mode: partial.mode ?? 'chat',
       title: partial.title,
       cwd: partial.cwd,
       resumeId: partial.resumeId,
@@ -149,6 +153,16 @@ export default function App() {
     setActiveId(tab.id)
     return tab.id
   }, [persist])
+
+  const toggleView = useCallback((id: string) => {
+    setTabs((current) => {
+      const next = current.map((tab) =>
+        tab.id === id ? { ...tab, mode: tab.mode === 'terminal' ? 'chat' as const : 'terminal' as const, firstPrompt: undefined } : tab
+      )
+      persist(next, activeId)
+      return next
+    })
+  }, [activeId, persist])
 
   const closeTab = useCallback((id: string) => {
     setTabs((current) => {
@@ -230,16 +244,21 @@ export default function App() {
 
   useEffect(() => {
     void (async () => {
-      const loaded = await window.api.getSettings()
-      setSettings(loaded)
-      if (!loaded.seenWorktreePromo) setShowAbout(true)
-      const saved = await window.api.loadTabs()
-      const nextTabs: Tab[] = saved.tabs.map((tab) => ({
-        ...tab,
-        started: tab.id === saved.activeId
-      }))
-      setTabs(nextTabs)
-      setActiveId(saved.activeId)
+      try {
+        const loaded = await window.api.getSettings()
+        setSettings(loaded)
+        if (!loaded.seenWorktreePromo) setShowAbout(true)
+        const saved = await window.api.loadTabs()
+        const nextTabs: Tab[] = saved.tabs.map((tab) => ({
+          ...tab,
+          mode: tab.view === 'terminal' ? 'terminal' : 'chat',
+          started: tab.id === saved.activeId
+        }))
+        setTabs(nextTabs)
+        setActiveId(saved.activeId)
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : String(loadError))
+      }
     })()
   }, [])
 
@@ -531,6 +550,13 @@ export default function App() {
           {active && (
             <>
               <button
+                className="rounded-md border border-zinc-800 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
+                title="Switch this session between native chat and the TUI. The in-flight turn stops."
+                onClick={() => toggleView(active.id)}
+              >
+                {active.mode === 'terminal' ? 'Chat' : 'TUI'}
+              </button>
+              <button
                 className="rounded-md p-1 text-zinc-400 hover:text-white"
                 title="Open in Cursor"
                 onClick={() => void window.api.openCursor(active.cwd)}
@@ -643,6 +669,12 @@ export default function App() {
                   </button>
                 ))}
               </div>
+              <button
+                className="mb-2 w-full rounded-lg border border-zinc-800 px-3 py-2 text-left text-[12px] text-zinc-400 hover:bg-zinc-900"
+                onClick={() => openTab({ title: 'terminal', cwd: repo, mode: 'terminal' })}
+              >
+                Terminal fallback
+              </button>
               <button
                 className="mb-3 flex w-full items-center justify-between rounded-lg bg-zinc-800 px-3 py-2 text-left text-[13px] hover:bg-zinc-700"
                 onClick={() => openTab({ title: 'grok', cwd: repo })}
@@ -891,7 +923,9 @@ export default function App() {
                     flex: visible ? 1 : undefined
                   }}
                 >
+                  {tab.mode === 'terminal' ? (
                   <TerminalPane
+                    key={`${tab.id}:terminal`}
                     tabId={tab.id}
                     cwd={tab.cwd}
                     resumeId={tab.resumeId}
@@ -914,6 +948,17 @@ export default function App() {
                       })
                     }}
                   />
+                  ) : (
+                  <ChatPane
+                    key={`${tab.id}:chat`}
+                    tabId={tab.id}
+                    cwd={tab.cwd}
+                    resumeId={tab.resumeId}
+                    firstPrompt={tab.firstPrompt}
+                    active={tab.id === activeId}
+                    onFork={(sessionId) => openTab({ title: 'fork', cwd: tab.cwd, resumeId: sessionId })}
+                  />
+                  )}
                 </div>
               )
             })

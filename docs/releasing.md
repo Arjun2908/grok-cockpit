@@ -15,6 +15,12 @@ npm run dist:checksums
 
 Packaged apps still spawn the user-installed `grok` binary (`~/.grok/bin/grok`). They do not bundle the agent.
 
+## Signed release
+
+`npm run dist:signed` builds an arm64 DMG and ZIP with the Developer ID Application identity `Arjun Gupta (49K92AGPFW)`, hardened runtime, and the entitlements in `build/entitlements.mac.plist`. electron-builder discovers that identity in the login keychain. Do not pass `--config.mac.identity=null` on this path.
+
+The app stays arm64-only because `node-pty` cannot be merged into a universal binary.
+
 ## Notarized release
 
-Notarization is not part of the 0.1.0 freeze. When credentials exist in the environment, follow Worktree Manager’s `docs/releasing.md` (`APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, Developer ID Application). Do not copy that repo’s certificate into this one.
+Notarization needs `APPLE_API_KEY`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER` in the environment, then `electron-builder` notarize or `xcrun notarytool`. The issuer UUID is not stored in this repo. Until it is supplied, signed builds are Developer ID signed and not stapled. Gatekeeper may still require a right-click Open on first launch.

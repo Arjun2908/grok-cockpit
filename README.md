@@ -2,7 +2,7 @@
 
 Personal macOS Electron app that wraps **live Grok Build TUI sessions** with Nutshell chrome: session resume, Linear ticket launch, `/private/tmp/<slug>-wt` worktrees, skill palette, MCP health, and a git diff pane.
 
-This is not an ACP rewrite. Each tab is a real `grok` process.
+Each tab is a native ACP chat against the installed `grok` binary. The header **TUI** button resumes the same session in the embedded terminal. Packaged apps do not bundle grok.
 
 ## Run
 
@@ -37,6 +37,10 @@ npx electron-rebuild -f -w node-pty
 - Background tabs can notify when Grok goes idle (Settings)
 
 Worktrees use `/private/tmp/<slug>-wt` and `.cursor/hooks/worktree-setup.sh`. Do **not** use `grok --worktree` from this app.
+
+## Install
+
+Signed arm64 builds are GitHub releases on [Arjun2908/grok-cockpit](https://github.com/Arjun2908/grok-cockpit/releases). Coworkers need access to that private repo, then download `Grok-Cockpit-<version>-arm64.dmg`. The app is Developer ID signed. It is not notarized until an App Store Connect issuer is configured, so the first open may need a right-click → Open.
 
 ## PTY checklist
 

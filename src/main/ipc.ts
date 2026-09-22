@@ -24,6 +24,8 @@ import {
 } from './grok-index'
 import { findIssue, listMyIssues } from './linear'
 import { openInCursor, openInFinder, openUrl } from './opener'
+import { callAcp, cancelAcp, promptAcp, replyAcp, startAcp, stopAcp } from './acp-broker'
+import type { PermissionMode, RpcCall } from '../shared/acp'
 import { killTab, resizeTab, spawnGrok, writeTab } from './pty-broker'
 import { loadSettings, loadTabs, saveSettings, saveTabs } from './settings'
 import { createNutshellWorktree, removeWorktree, repairWorktree } from './worktrees'
@@ -47,6 +49,33 @@ export function registerIpc(getWindow: () => BrowserWindow | null, userData: str
   })
   ipcMain.handle('pty:kill', (_event, tabId: string) => {
     killTab(tabId)
+  })
+
+  ipcMain.handle('acp:start', async (_event, tabId: string, cwd: string, resumeId?: string, mode?: PermissionMode) => {
+    const win = getWindow()
+    if (!win) return { ok: false, error: 'no window' }
+    return startAcp(win, tabId, cwd, resumeId, mode)
+  })
+  ipcMain.handle('acp:prompt', async (_event, tabId: string, text: string) => {
+    const win = getWindow()
+    if (!win) return
+    await promptAcp(win, tabId, text)
+  })
+  ipcMain.handle('acp:call', async (_event, tabId: string, call: RpcCall) => {
+    const win = getWindow()
+    if (!win) return { ok: false, error: 'no window' }
+    return callAcp(win, tabId, call)
+  })
+  ipcMain.handle('acp:reply', (_event, tabId: string, id: number, result?: unknown, error?: string) => {
+    replyAcp(tabId, id, result, error)
+  })
+  ipcMain.handle('acp:cancel', async (_event, tabId: string) => {
+    const win = getWindow()
+    if (!win) return
+    await cancelAcp(win, tabId)
+  })
+  ipcMain.handle('acp:stop', (_event, tabId: string) => {
+    stopAcp(tabId)
   })
 
   ipcMain.handle('sessions:list', async (_event, cwd: string) => listSessions(cwd))
@@ -121,6 +150,11 @@ export function registerIpc(getWindow: () => BrowserWindow | null, userData: str
       cwd = created.path
     }
     return { ok: true as const, cwd, prompt, slug, worktreePath: worktreePathForSlug(slug) }
+  })
+
+  ipcMain.handle('plan:read', (_event, sessionId: string, cwd: string) => {
+    const path = join(homedir(), '.grok', 'sessions', encodeURIComponent(cwd), sessionId, 'plan.md')
+    return existsSync(path) ? readFileSync(path, 'utf8') : ''
   })
 
   ipcMain.handle('dialog:pick-directory', async () => {

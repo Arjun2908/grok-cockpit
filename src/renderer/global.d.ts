@@ -13,6 +13,7 @@ import type {
   SkillInfo,
   WorktreeInfo
 } from '../shared/types'
+import type { AcpEvent, ConfigOption, PermissionMode, RpcCall } from '../shared/acp'
 import type { SessionUsage } from '../shared/usage'
 
 type LinearListResult =
@@ -45,6 +46,18 @@ declare global {
       writePty: (tabId: string, data: string) => void
       resizePty: (tabId: string, cols: number, rows: number) => void
       killPty: (tabId: string) => Promise<void>
+      startAcp: (
+        tabId: string,
+        cwd: string,
+        resumeId?: string,
+        mode?: PermissionMode
+      ) => Promise<{ ok: true; sessionId: string; config: ConfigOption[] } | { ok: false; error: string }>
+      promptAcp: (tabId: string, text: string) => Promise<void>
+      callAcp: (tabId: string, call: RpcCall) => Promise<{ ok: true; result: unknown } | { ok: false; error: string }>
+      replyAcp: (tabId: string, id: number, result?: unknown, error?: string) => Promise<void>
+      cancelAcp: (tabId: string) => Promise<void>
+      stopAcp: (tabId: string) => Promise<void>
+      onAcpEvent: (callback: (tabId: string, event: AcpEvent) => void) => () => void
       onPtyData: (callback: (tabId: string, data: string) => void) => () => void
       onPtyExit: (callback: (tabId: string, code: number) => void) => () => void
       onPtyQuiet: (callback: (tabId: string) => void) => () => void
@@ -90,6 +103,7 @@ declare global {
       latestSessionId: (cwd: string, afterMs: number) => Promise<string | null>
       notify: (title: string, body: string) => Promise<void>
       readReadme: () => Promise<string>
+      readPlan: (sessionId: string, cwd: string) => Promise<string>
     }
   }
 }

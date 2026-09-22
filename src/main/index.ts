@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, session } from 'electron'
 import { join } from 'node:path'
 import { registerIpc, teardownIpc } from './ipc'
+import { stopAllAcp } from './acp-broker'
 import { killAll } from './pty-broker'
 import { developmentRendererUrl, isTrustedRendererUrl } from './renderer-security'
 
@@ -144,6 +145,7 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   teardownIpc()
+  stopAllAcp()
   killAll()
 })
 app.on('window-all-closed', () => {

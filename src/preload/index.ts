@@ -23,6 +23,20 @@ const api = {
     ipcRenderer.send('pty:resize', tabId, cols, rows)
   },
   killPty: (tabId: string) => ipcRenderer.invoke('pty:kill', tabId),
+  startAcp: (tabId: string, cwd: string, resumeId?: string, mode?: string) =>
+    ipcRenderer.invoke('acp:start', tabId, cwd, resumeId, mode),
+  promptAcp: (tabId: string, text: string) => ipcRenderer.invoke('acp:prompt', tabId, text),
+  callAcp: (tabId: string, call: { method: string; params: Record<string, unknown> }) =>
+    ipcRenderer.invoke('acp:call', tabId, call),
+  replyAcp: (tabId: string, id: number, result?: unknown, error?: string) =>
+    ipcRenderer.invoke('acp:reply', tabId, id, result, error),
+  cancelAcp: (tabId: string) => ipcRenderer.invoke('acp:cancel', tabId),
+  stopAcp: (tabId: string) => ipcRenderer.invoke('acp:stop', tabId),
+  onAcpEvent: (callback: (tabId: string, event: unknown) => void) => {
+    const handler = (_event: unknown, tabId: string, event: unknown): void => callback(tabId, event)
+    ipcRenderer.on('acp:event', handler)
+    return () => ipcRenderer.removeListener('acp:event', handler)
+  },
   onPtyData: (callback: (tabId: string, data: string) => void) => {
     const handler = (_event: unknown, tabId: string, data: string): void => callback(tabId, data)
     ipcRenderer.on('pty:data', handler)
@@ -84,7 +98,8 @@ const api = {
   latestSessionId: (cwd: string, afterMs: number) =>
     ipcRenderer.invoke('usage:latest-session', cwd, afterMs),
   notify: (title: string, body: string) => ipcRenderer.invoke('notify', title, body),
-  readReadme: () => ipcRenderer.invoke('readme:read') as Promise<string>
+  readReadme: () => ipcRenderer.invoke('readme:read') as Promise<string>,
+  readPlan: (sessionId: string, cwd: string) => ipcRenderer.invoke('plan:read', sessionId, cwd) as Promise<string>
 }
 
 export type CockpitAPI = typeof api

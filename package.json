@@ -1,6 +1,6 @@
 {
   "name": "grok-cockpit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "productName": "Grok Cockpit",
   "description": "Nutshell daily driver around live Grok Build TUI sessions",
   "main": "./out/main/index.js",
@@ -19,6 +19,7 @@
     "postinstall": "electron-rebuild -f -w node-pty",
     "release:clean": "node scripts/clean-release.mjs",
     "dist:unsigned": "npm run release:clean && npm run build && electron-builder --mac --arm64 --publish never --config.forceCodeSigning=false --config.mac.identity=null --config.mac.hardenedRuntime=false --config.mac.notarize=false",
+    "dist:signed": "npm run release:clean && npm run build && CSC_IDENTITY_AUTO_DISCOVERY=true electron-builder --mac --arm64 --publish never",
     "dist:checksums": "node scripts/generate-checksums.mjs release"
   },
   "build": {
@@ -40,6 +41,9 @@
       "icon": "build/icon.png",
       "artifactName": "Grok-Cockpit-${version}-${arch}.${ext}",
       "category": "public.app-category.developer-tools",
+      "identity": "Arjun Gupta (49K92AGPFW)",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
     },

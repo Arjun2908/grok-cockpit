@@ -62,11 +62,14 @@ export type GitSnapshot = {
   files: GitFile[]
 }
 
+export type SessionView = 'chat' | 'terminal'
+
 export type PersistedTab = {
   id: string
   title: string
   cwd: string
   resumeId?: string
+  view?: SessionView
 }
 
 export type PrInfo = {
