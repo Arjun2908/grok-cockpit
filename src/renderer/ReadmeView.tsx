@@ -4,14 +4,23 @@ import { parseReadme } from '@shared/readme'
 
 function inline(text: string): ReactNode[] {
   const parts: ReactNode[] = []
-  const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g
+  const pattern = /(\*\*[^*]+\*\*|`[^`]+`|<kbd>[^<]+<\/kbd>|\[[^\]]+\]\([^)]+\))/g
   let last = 0
   let match: RegExpExecArray | null
   let key = 0
   while ((match = pattern.exec(text))) {
     if (match.index > last) parts.push(text.slice(last, match.index))
     const token = match[0]
-    if (token.startsWith('**')) {
+    if (token.startsWith('<kbd>')) {
+      parts.push(
+        <kbd
+          key={key}
+          className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300"
+        >
+          {token.slice(5, -6).replace(/\\(.)/g, '$1')}
+        </kbd>
+      )
+    } else if (token.startsWith('**')) {
       parts.push(
         <strong key={key} className="font-semibold text-zinc-100">
           {token.slice(2, -2)}
@@ -86,6 +95,39 @@ export default function ReadmeView({ markdown, onClose }: { markdown: string; on
                 </h2>
               )
             }
+            if (block.type === 'h3') {
+              return (
+                <h3 key={index} className="mb-1 mt-4 text-[13px] font-semibold text-zinc-100">
+                  {inline(block.text)}
+                </h3>
+              )
+            }
+            if (block.type === 'table') {
+              return (
+                <table key={index} className="mb-4 w-full text-left text-[13px] text-zinc-300">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wide text-zinc-500">
+                      {block.header.map((cell, cellIndex) => (
+                        <th key={cellIndex} className="py-1.5 pr-4 font-medium">
+                          {inline(cell)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, rowIndex) => (
+                      <tr key={rowIndex} className="border-b border-zinc-900">
+                        {row.map((cell, cellIndex) => (
+                          <td key={cellIndex} className="py-1.5 pr-4">
+                            {inline(cell)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )
+            }
             if (block.type === 'code') {
               return (
                 <pre
@@ -103,6 +145,15 @@ export default function ReadmeView({ markdown, onClose }: { markdown: string; on
                     <li key={itemIndex}>{inline(item)}</li>
                   ))}
                 </ul>
+              )
+            }
+            if (block.type === 'ol') {
+              return (
+                <ol key={index} className="mb-4 list-decimal space-y-1.5 pl-5 text-[13px] leading-5 text-zinc-300">
+                  {block.items.map((item, itemIndex) => (
+                    <li key={itemIndex}>{inline(item)}</li>
+                  ))}
+                </ol>
               )
             }
             if (block.type === 'checks') {

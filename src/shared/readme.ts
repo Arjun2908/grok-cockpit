@@ -1,8 +1,39 @@
 export type ReadmeBlock =
-  | { type: 'h1' | 'h2' | 'p'; text: string }
+  | { type: 'h1' | 'h2' | 'h3' | 'p'; text: string }
   | { type: 'code'; text: string }
   | { type: 'ul'; items: string[] }
+  | { type: 'ol'; items: string[] }
   | { type: 'checks'; items: Array<{ done: boolean; text: string }> }
+  | { type: 'table'; header: string[]; rows: string[][] }
+
+const ORDERED = /^\d+\.\s/
+const TABLE_DIVIDER = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/
+
+function isHtml(line: string): boolean {
+  return line.trimStart().startsWith('<')
+}
+
+function startsBlock(line: string): boolean {
+  return (
+    line.startsWith('```') ||
+    line.startsWith('# ') ||
+    line.startsWith('## ') ||
+    line.startsWith('### ') ||
+    line.startsWith('- ') ||
+    line.startsWith('|') ||
+    ORDERED.test(line) ||
+    isHtml(line)
+  )
+}
+
+function tableCells(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/\|$/, '')
+    .split('|')
+    .map((cell) => cell.trim())
+}
 
 export function parseReadme(markdown: string): ReadmeBlock[] {
   const blocks: ReadmeBlock[] = []
@@ -21,6 +52,10 @@ export function parseReadme(markdown: string): ReadmeBlock[] {
       i += 1
       continue
     }
+    if (isHtml(line)) {
+      i += 1
+      continue
+    }
     if (line.startsWith('# ')) {
       blocks.push({ type: 'h1', text: line.slice(2) })
       i += 1
@@ -29,6 +64,21 @@ export function parseReadme(markdown: string): ReadmeBlock[] {
     if (line.startsWith('## ')) {
       blocks.push({ type: 'h2', text: line.slice(3) })
       i += 1
+      continue
+    }
+    if (line.startsWith('### ')) {
+      blocks.push({ type: 'h3', text: line.slice(4) })
+      i += 1
+      continue
+    }
+    if (line.startsWith('|')) {
+      const rows: string[][] = []
+      while (i < lines.length && lines[i].startsWith('|')) {
+        if (!TABLE_DIVIDER.test(lines[i].trim())) rows.push(tableCells(lines[i]))
+        i += 1
+      }
+      const [header = [], ...body] = rows
+      blocks.push({ type: 'table', header, rows: body })
       continue
     }
     if (line.startsWith('- [ ] ') || line.startsWith('- [x] ')) {
@@ -49,18 +99,22 @@ export function parseReadme(markdown: string): ReadmeBlock[] {
       blocks.push({ type: 'ul', items })
       continue
     }
+    if (ORDERED.test(line)) {
+      const items: string[] = []
+      while (i < lines.length && ORDERED.test(lines[i])) {
+        items.push(lines[i].replace(ORDERED, ''))
+        i += 1
+      }
+      blocks.push({ type: 'ol', items })
+      continue
+    }
     if (!line.trim()) {
       i += 1
       continue
     }
-    const para: string[] = []
-    while (
-      i < lines.length &&
-      lines[i].trim() &&
-      !lines[i].startsWith('#') &&
-      !lines[i].startsWith('- ') &&
-      !lines[i].startsWith('```')
-    ) {
+    const para: string[] = [line]
+    i += 1
+    while (i < lines.length && lines[i].trim() && !startsBlock(lines[i])) {
       para.push(lines[i])
       i += 1
     }
