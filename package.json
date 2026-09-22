@@ -1,6 +1,6 @@
 {
   "name": "grok-cockpit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "productName": "Grok Cockpit",
   "description": "Nutshell daily driver around live Grok Build TUI sessions",
   "main": "./out/main/index.js",

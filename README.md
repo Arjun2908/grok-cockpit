@@ -8,7 +8,7 @@ Apple silicon only. The app does not bundle `grok`.
 
 Download the latest disk image from [Releases](https://github.com/Arjun2908/grok-cockpit/releases/latest):
 
-**[Grok Cockpit 0.2.0](https://github.com/Arjun2908/grok-cockpit/releases/tag/v0.2.0)** · `Grok-Cockpit-0.2.0-arm64.dmg`
+**[Grok Cockpit 0.2.1](https://github.com/Arjun2908/grok-cockpit/releases/latest)** · `Grok-Cockpit-0.2.1-arm64.dmg`
 
 The build is Developer ID signed and notarized. Open the DMG, drag Grok Cockpit to Applications, and launch it.
 
