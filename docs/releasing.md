@@ -22,7 +22,7 @@ The workflow refuses to publish until these Actions secrets exist. Set them on t
 | Secret | What it is |
 | --- | --- |
 | `MACOS_CERTIFICATE_P12_BASE64` | Base64 of the Developer ID Application `.p12` for team `49K92AGPFW` |
-| `MACOS_CERTIFICATE_PASSWORD` | Password for that `.p12` |
+| `MACOS_CERTIFICATE_PASSWORD` | Password for that `.p12`. This is the one secret that is not stored next to the key. Set it yourself. |
 | `APPLE_API_KEY_P8` | Contents of the App Store Connect API key |
 | `APPLE_API_KEY_ID` | Key id, currently `KUSMK64A9Y` |
 | `APPLE_API_ISSUER` | Issuer ID from App Store Connect → Users and Access → Integrations |

@@ -4,10 +4,20 @@ import type {
   CreateWorktreeRequest,
   LaunchTicketRequest,
   PersistedTab,
-  PtySpawnRequest
+  PtySpawnRequest,
+  UpdateStatus
 } from '../shared/types'
 
 const api = {
+  getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke('update:status'),
+  checkForUpdates: (): Promise<UpdateStatus> => ipcRenderer.invoke('update:check'),
+  downloadUpdate: (): Promise<UpdateStatus> => ipcRenderer.invoke('update:download'),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke('update:install'),
+  onUpdateStatus: (callback: (status: UpdateStatus) => void) => {
+    const handler = (_event: unknown, status: UpdateStatus): void => callback(status)
+    ipcRenderer.on('update:status', handler)
+    return () => ipcRenderer.removeListener('update:status', handler)
+  },
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:get'),
   saveSettings: (settings: AppSettings): Promise<AppSettings> =>
     ipcRenderer.invoke('settings:save', settings),

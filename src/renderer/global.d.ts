@@ -11,6 +11,7 @@ import type {
   PrInfo,
   PtySpawnRequest,
   SkillInfo,
+  UpdateStatus,
   WorktreeInfo
 } from '../shared/types'
 import type { AcpEvent, ConfigOption, PermissionMode, RpcCall } from '../shared/acp'
@@ -38,6 +39,11 @@ type PasteResult =
 declare global {
   interface Window {
     api: {
+      getUpdateStatus: () => Promise<UpdateStatus>
+      checkForUpdates: () => Promise<UpdateStatus>
+      downloadUpdate: () => Promise<UpdateStatus>
+      installUpdate: () => Promise<void>
+      onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void
       getSettings: () => Promise<AppSettings>
       saveSettings: (settings: AppSettings) => Promise<AppSettings>
       loadTabs: () => Promise<{ tabs: PersistedTab[]; activeId: string | null }>

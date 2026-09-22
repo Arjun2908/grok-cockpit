@@ -62,6 +62,16 @@ export type GitSnapshot = {
   files: GitFile[]
 }
 
+export type UpdatePhase = 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'uptodate' | 'unsupported' | 'error'
+
+export type UpdateStatus = {
+  phase: UpdatePhase
+  version: string
+  currentVersion: string
+  percent: number
+  message: string
+}
+
 export type SessionView = 'chat' | 'terminal'
 
 export type PersistedTab = {

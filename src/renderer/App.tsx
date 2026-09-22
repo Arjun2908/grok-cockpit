@@ -24,6 +24,7 @@ import type {
   PrInfo,
   SessionView,
   SkillInfo,
+  UpdateStatus,
   WorktreeInfo
 } from '@shared/types'
 import { DEFAULT_REPO } from '@shared/types'
@@ -100,6 +101,7 @@ export default function App() {
   const [pr, setPr] = useState<PrInfo>(null)
   const [launch, setLaunch] = useState<LaunchState | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [update, setUpdate] = useState<UpdateStatus | null>(null)
   const [createSlug, setCreateSlug] = useState('')
   const [removePath, setRemovePath] = useState<string | null>(null)
   const [sessionToDelete, setSessionToDelete] = useState<GrokSession | null>(null)
@@ -260,6 +262,11 @@ export default function App() {
         setError(loadError instanceof Error ? loadError.message : String(loadError))
       }
     })()
+  }, [])
+
+  useEffect(() => {
+    void window.api.getUpdateStatus().then(setUpdate)
+    return window.api.onUpdateStatus(setUpdate)
   }, [])
 
   useEffect(() => {
@@ -606,6 +613,24 @@ export default function App() {
         </div>
       </header>
 
+      {update && update.phase !== 'idle' && update.phase !== 'unsupported' && update.phase !== 'uptodate' && (
+        <div className="flex items-center gap-3 border-b border-zinc-800 bg-zinc-950 px-4 py-1.5 text-[12px] text-zinc-300">
+          <span className="min-w-0 flex-1">
+            {update.message}
+            {update.phase === 'downloading' ? ` ${update.percent}%` : ''}
+            {update.version ? ` · ${update.version}` : ''}
+          </span>
+          {update.phase === 'available' && (
+            <button className="rounded-md bg-zinc-100 px-2 py-1 text-zinc-900" onClick={() => void window.api.downloadUpdate()}>Download</button>
+          )}
+          {update.phase === 'downloaded' && (
+            <button className="rounded-md bg-zinc-100 px-2 py-1 text-zinc-900" onClick={() => void window.api.installUpdate()}>Restart</button>
+          )}
+          {update.phase === 'error' && (
+            <button className="text-zinc-500" onClick={() => void window.api.checkForUpdates()}>Retry</button>
+          )}
+        </div>
+      )}
       {warning && (
         <div className="border-b border-amber-900/60 bg-amber-950/80 px-4 py-1.5 text-xs text-amber-200">
           {warning}

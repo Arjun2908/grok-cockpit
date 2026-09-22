@@ -28,9 +28,16 @@ import { callAcp, cancelAcp, promptAcp, replyAcp, startAcp, stopAcp } from './ac
 import type { PermissionMode, RpcCall } from '../shared/acp'
 import { killTab, resizeTab, spawnGrok, writeTab } from './pty-broker'
 import { loadSettings, loadTabs, saveSettings, saveTabs } from './settings'
+import { checkForUpdates, downloadUpdate, getUpdateStatus, installUpdate } from './updater'
 import { createNutshellWorktree, removeWorktree, repairWorktree } from './worktrees'
 
 export function registerIpc(getWindow: () => BrowserWindow | null, userData: string): void {
+  ipcMain.handle('update:status', () => getUpdateStatus())
+  ipcMain.handle('update:check', () => checkForUpdates())
+  ipcMain.handle('update:download', () => downloadUpdate())
+  ipcMain.handle('update:install', () => {
+    installUpdate()
+  })
   ipcMain.handle('settings:get', () => loadSettings(userData))
   ipcMain.handle('settings:save', (_event, settings: AppSettings) => saveSettings(userData, settings))
   ipcMain.handle('tabs:load', () => loadTabs(userData))

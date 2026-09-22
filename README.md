@@ -60,4 +60,4 @@ npx electron-rebuild -f -w node-pty
 
 Published builds are arm64 DMGs named `Grok-Cockpit-<version>-arm64.dmg`. Checksums are in `SHA256SUMS` on the same release.
 
-How the next notarized DMG is produced is in [docs/releasing.md](docs/releasing.md). The app does not yet install updates by itself. Download the next release from this page.
+How the next notarized DMG is produced is in [docs/releasing.md](docs/releasing.md). Installed copies check GitHub Releases a few seconds after launch. When a newer signed build exists, a bar at the top offers Download, then Restart. Dev sessions (`npm run dev`) do not update themselves.
